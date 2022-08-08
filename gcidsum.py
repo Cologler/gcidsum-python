@@ -58,11 +58,7 @@ def __parse_args(args: Tuple[str, ...]):
         'fs': fs
     }
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-    args = tuple(argv[1:])
-
+def gcidsum_main(args: List[str]):
     if not args or args == ('--help', ):
         return __show_help()
 
@@ -92,6 +88,14 @@ def main(argv=None):
                 output = f'{gcid}  {path}'
                 assert __output_pattern.match(output)
                 print(output)
+
+def main(argv=None):
+    try:
+        if argv is None:
+            argv = sys.argv
+        return gcidsum_main(tuple(argv[1:]))
+    except KeyboardInterrupt:
+        return 1
 
 if __name__ == '__main__':
     exit(main() or 0)
