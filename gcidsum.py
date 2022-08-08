@@ -9,12 +9,20 @@ from typing import *
 import sys
 import re
 import pathlib
-
+import os
 import xlgcid
 
 def __enumerate_names(args):
     for arg in args:
-        yield from pathlib.Path('.').glob(arg)
+        try:
+            items = list(pathlib.Path('.').glob(arg))
+        except re.error:
+            items = [arg] if os.path.exists(arg) else None
+
+        if items is None:
+            __error(f"can't open '{arg}': Invalid argument")
+        else:
+            yield from items
 
 __output_pattern = re.compile('^(?P<gcid>[0-9a-f]{40})  (?P<name>.+)$', re.I)
 def __parse_output(line: str):
