@@ -16,7 +16,7 @@ def __enumerate_names(args):
     for arg in args:
         try:
             items = list(pathlib.Path('.').glob(arg))
-        except re.error:
+        except (re.error, NotImplementedError):
             items = [arg] if os.path.exists(arg) else None
 
         if items is None:
