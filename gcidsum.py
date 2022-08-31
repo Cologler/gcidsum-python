@@ -15,14 +15,26 @@ import xlgcid
 def __enumerate_names(args):
     for arg in args:
         try:
-            items = list(pathlib.Path('.').glob(arg))
-        except (re.error, NotImplementedError):
-            items = [arg] if os.path.exists(arg) else None
-
-        if items is None:
-            __error(f"can't open '{arg}': Invalid argument")
+            if os.path.isabs(arg):
+                if os.name == 'nt':
+                    drive, path = os.path.splitdrive(arg)
+                    path = path.removeprefix('\\').removeprefix('/')
+                    items = list(pathlib.Path(drive).glob(path))
+                else:
+                    path = arg.removeprefix('/')
+                    items = list(pathlib.Path('/').glob(path))
+            else:
+                try:
+                    items = list(pathlib.Path('.').glob(arg))
+                except re.error:
+                    items = [arg] if os.path.exists(arg) else None
+        except ValueError as ve:
+            __error(ve)
         else:
-            yield from items
+            if items is None:
+                __error(f"can't open '{arg}': Invalid argument")
+            else:
+                yield from items
 
 __output_pattern = re.compile('^(?P<gcid>[0-9a-f]{40})  (?P<name>.+)$', re.I)
 def __parse_output(line: str):
