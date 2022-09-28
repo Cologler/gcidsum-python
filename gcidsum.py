@@ -12,29 +12,30 @@ import pathlib
 import os
 import xlgcid
 
-def __enumerate_names(args):
-    for arg in args:
-        try:
-            if os.path.isabs(arg):
-                if os.name == 'nt':
-                    drive, path = os.path.splitdrive(arg)
-                    path = path.removeprefix('\\').removeprefix('/')
-                    items = list(pathlib.Path(drive).glob(path))
-                else:
-                    path = arg.removeprefix('/')
-                    items = list(pathlib.Path('/').glob(path))
+def _enumerate_paths(pattern: str):
+    try:
+        if os.path.isabs(pattern):
+            if os.name == 'nt':
+                drive, path = os.path.splitdrive(pattern)
+                # C: resolve to ~, C:\ resolve to C:, see https://stackoverflow.com/questions/48810950/
+                drive += '\\'
+                path = path.removeprefix('\\').removeprefix('/')
+                items = list(pathlib.Path(drive).glob(path))
             else:
-                try:
-                    items = list(pathlib.Path('.').glob(arg))
-                except re.error:
-                    items = [arg] if os.path.exists(arg) else None
-        except ValueError as ve:
-            __error(ve)
+                path = pattern.removeprefix('/')
+                items = list(pathlib.Path('/').glob(path))
         else:
-            if items is None:
-                __error(f"can't open '{arg}': Invalid argument")
-            else:
-                yield from items
+            try:
+                items = list(pathlib.Path('.').glob(pattern))
+            except re.error:
+                items = [pattern] if os.path.exists(pattern) else None
+    except ValueError as ve:
+        __error(ve)
+    else:
+        if items is None:
+            __error(f"can't open '{pattern}': Invalid argument")
+        else:
+            yield from items
 
 __output_pattern = re.compile('^(?P<gcid>[0-9a-f]{40})  (?P<name>.+)$', re.I)
 def __parse_output(line: str):
@@ -84,10 +85,14 @@ def gcidsum_main(args: List[str]):
 
     pargs = __parse_args(args)
 
+    def enumerate_from_args(args):
+        for arg in args:
+            yield from _enumerate_paths(arg)
+
     if pargs['c']:
         failed = 0
         total = 0
-        for path in __enumerate_names(pargs['fs']):
+        for path in enumerate_from_args(pargs['fs']):
             for line in path.read_text('utf-8').splitlines():
                 if line:
                     gcid_in_file, name = __parse_output(line)
@@ -103,7 +108,7 @@ def gcidsum_main(args: List[str]):
         if failed:
             __error(f'WARNING: {failed} of {total} computed checksums did NOT match')
     else:
-        for path in __enumerate_names(pargs['fs']):
+        for path in enumerate_from_args(pargs['fs']):
             if gcid := __get_gcid(path):
                 output = f'{gcid}  {path}'
                 assert __output_pattern.match(output)
