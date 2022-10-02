@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gcidsum"
-version = "0.1.2"
+version = "0.1.4"
 description = ""
 authors = ["Cologler <skyoflw@gmail.com>"]
 license = "MIT"
