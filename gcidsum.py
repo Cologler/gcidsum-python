@@ -57,7 +57,7 @@ def __error(msg: str):
     print(f'gcidsum: {msg}', file=sys.stderr)
 
 def __show_help():
-    print('''Usage: gcidsum [-c[swe]|-e] [FILE]...
+    print('''Usage: gcidsum [-cswe] [FILE]...
 
 Print or check GCID checksums
 
