@@ -5,6 +5,7 @@
 #
 # ----------
 
+from ast import arg
 from typing import *
 import sys
 import re
@@ -68,13 +69,12 @@ Print or check GCID checksums
 def __parse_args(args: Tuple[str, ...]):
     s, w, e, excluded = [False] * 4
 
-    if c := args[0].startswith('-c'):
+    if args[0].startswith('-'):
+        fs = args[1:]
+        c = 'c' in args[0]
         s = 's' in args[0]
         w = 'w' in args[0]
         e = 'e' in args[0]
-        fs = args[1:]
-    elif e := args[0] == '-e':
-        fs = args[1:]
     else:
         fs = args
 
