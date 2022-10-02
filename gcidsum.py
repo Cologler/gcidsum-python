@@ -56,27 +56,39 @@ def __error(msg: str):
     print(f'gcidsum: {msg}', file=sys.stderr)
 
 def __show_help():
-    print('''Usage: gcidsum [-c[sw]] [FILE]...
+    print('''Usage: gcidsum [-c[swe]|-e] [FILE]...
 
 Print or check GCID checksums
 
         -c      Check sums against list in FILEs
         -s      Don't output anything, status code shows success
-        -w      Warn about improperly formatted checksum lines''')
+        -w      Warn about improperly formatted checksum lines
+        -e      If exist, the first FILE should be a exists gcidsum file to exclude''')
 
 def __parse_args(args: Tuple[str, ...]):
-    s, w = False, False
+    s, w, e, excluded = [False] * 4
 
     if c := args[0].startswith('-c'):
         s = 's' in args[0]
         w = 'w' in args[0]
+        e = 'e' in args[0]
+        fs = args[1:]
+    elif e := args[0] == '-e':
         fs = args[1:]
     else:
         fs = args
 
+    if e:
+        if fs:
+            excluded, *fs = fs
+        else:
+            __error('Missing the gcidsum file (for -e options)')
+            exit()
+
     return {
-        'c': c, 's': s, 'w': w,
-        'fs': fs
+        'c': c, 's': s, 'w': w, 'e': e,
+        'fs': fs,
+        'excluded': excluded,
     }
 
 def gcidsum_main(args: List[str]):
@@ -89,6 +101,17 @@ def gcidsum_main(args: List[str]):
         for arg in args:
             yield from _enumerate_paths(arg)
 
+    os.chdir(r'C:\Users\skyoflw\Downloads\QZJVR')
+
+    if pargs['e']:
+        excluded_lines = pathlib.Path(pargs['excluded']).read_text('utf-8').splitlines()
+        excluded = set(__parse_output(l)[1] for l in excluded_lines)
+    else:
+        excluded = ()
+
+    def is_excluded(name: str):
+        return str(name) in excluded
+
     if pargs['c']:
         failed = 0
         total = 0
@@ -96,6 +119,10 @@ def gcidsum_main(args: List[str]):
             for line in path.read_text('utf-8').splitlines():
                 if line:
                     gcid_in_file, name = __parse_output(line)
+
+                    if is_excluded(name):
+                        continue
+
                     if gcid_in_file:
                         eq = (gcid := __get_gcid(name)) and (gcid.lower() == gcid_in_file.lower())
                         total += 1
@@ -109,6 +136,9 @@ def gcidsum_main(args: List[str]):
             __error(f'WARNING: {failed} of {total} computed checksums did NOT match')
     else:
         for path in enumerate_from_args(pargs['fs']):
+            if is_excluded(path):
+                continue
+
             if gcid := __get_gcid(path):
                 output = f'{gcid}  {path}'
                 assert __output_pattern.match(output)
