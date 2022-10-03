@@ -101,8 +101,6 @@ def gcidsum_main(args: List[str]):
         for arg in args:
             yield from _enumerate_paths(arg)
 
-    os.chdir(r'C:\Users\skyoflw\Downloads\QZJVR')
-
     if pargs['e']:
         excluded_lines = pathlib.Path(pargs['excluded']).read_text('utf-8').splitlines()
         excluded = set(__parse_output(l)[1] for l in excluded_lines)
