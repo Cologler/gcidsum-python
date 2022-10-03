@@ -67,7 +67,7 @@ Print or check GCID checksums
         -e      If exist, the first FILE should be a exists gcidsum file to exclude''')
 
 def __parse_args(args: Tuple[str, ...]):
-    c, s, w, e, excluded = [False] * 5
+    excluded = None
 
     opt = {}
     opt.update(dict.fromkeys(list('cswe'), False))
@@ -79,7 +79,7 @@ def __parse_args(args: Tuple[str, ...]):
     else:
         fs = args
 
-    if e:
+    if opt['e']:
         if fs:
             excluded, *fs = fs
         else:
