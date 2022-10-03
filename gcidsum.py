@@ -67,14 +67,15 @@ Print or check GCID checksums
         -e      If exist, the first FILE should be a exists gcidsum file to exclude''')
 
 def __parse_args(args: Tuple[str, ...]):
-    s, w, e, excluded = [False] * 4
+    c, s, w, e, excluded = [False] * 5
+
+    opt = {}
+    opt.update(dict.fromkeys(list('cswe'), False))
 
     if args[0].startswith('-'):
         fs = args[1:]
-        c = 'c' in args[0]
-        s = 's' in args[0]
-        w = 'w' in args[0]
-        e = 'e' in args[0]
+        for o in 'cswe':
+            opt[o] = o in args[0]
     else:
         fs = args
 
@@ -85,11 +86,10 @@ def __parse_args(args: Tuple[str, ...]):
             __error('Missing the gcidsum file (for -e options)')
             exit()
 
-    return {
-        'c': c, 's': s, 'w': w, 'e': e,
-        'fs': fs,
-        'excluded': excluded,
-    }
+    opt['fs'] = fs
+    opt['excluded'] = excluded
+
+    return opt
 
 def gcidsum_main(args: List[str]):
     if not args or args == ('--help', ):
