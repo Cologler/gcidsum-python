@@ -5,8 +5,7 @@
 #
 # ----------
 
-from ast import arg
-from typing import *
+from typing import Tuple, List
 import sys
 import re
 import pathlib
@@ -103,7 +102,7 @@ def gcidsum_main(args: List[str]):
 
     if pargs['e']:
         excluded_lines = pathlib.Path(pargs['excluded']).read_text('utf-8').splitlines()
-        excluded = set(__parse_output(l)[1] for l in excluded_lines)
+        excluded = set(__parse_output(x)[1] for x in excluded_lines)
     else:
         excluded = ()
 
